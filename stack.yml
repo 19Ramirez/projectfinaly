@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  # PROXY INVERSO PRINCIPAL (TRAEFIK) - Gestiona SSL y subdominios automáticamente
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true" # Modo Clúster Swarm activo
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.https.address=:443"
+      - "--certificatesresolvers.http.acme.httpchallenge=true"
+      - "--certificatesresolvers.http.acme.httpchallenge.entrypoint=http"
+      - "--certificatesresolvers.http.acme.email=byronrm@example.com" # Cambiar por tu correo real si deseas
+      - "--certificatesresolvers.http.acme.storage=/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /home/1750002782/landinga/acme.json:/acme.json
+    networks:
+      - traefik-public
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+  # APLICACIÓN WEB COMPLETAMENTE FUNCIONAL (FRONTEND + BACKEND INTEGRADOS)
+  app:
+    image: ghcr.io/19ramirez/taller-git-colaborativo/docker-taller:1.0.0
+    networks:
+      - traefik-public
+    environment:
+      - DB_HOST=db
+      - DB_NAME=taller_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres_password
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        # Redirección Forzada HTTP -> HTTPS (Subdominio Frontend)
+        - "traefik.http.routers.ramirez-app.entrypoints=http"
+        - "traefik.http.routers.ramirez-app.rule=Host(`fd.byronrm.com`)"
+        - "traefik.http.middlewares.ramirez-app-redirect.redirectscheme.scheme=https"
+        - "traefik.http.routers.ramirez-app.middlewares=ramirez-app-redirect"
+        # Endpoint Seguro HTTPS
+        - "traefik.http.routers.ramirez-app-secure.entrypoints=https"
+        - "traefik.http.routers.ramirez-app-secure.rule=Host(`fd.byronrm.com`) || Host(`backfd.byronrm.com`)"
+        - "traefik.http.routers.ramirez-app-secure.tls=true"
+        - "traefik.http.routers.ramirez-app-secure.tls.certresolver=http"
+        - "traefik.http.services.ramirez-app-service.loadbalancer.server.port=5000"
+        - "traefik.docker.network=traefik-public"
+
+  # BASE DE DATOS POSTGRESQL (PERSISTENCIA REQUERIDA)
+  db:
+    image: postgres:15-alpine
+    networks:
+      - traefik-public
+    environment:
+      - POSTGRES_DB=taller_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  # ADMINISTRADOR GRÁFICO DE LA BASE DE DATOS (ADMINER)
+  adminer:
+    image: adminer:latest
+    networks:
+      - traefik-public
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.ramirez-adminer.entrypoints=http"
+        - "traefik.http.routers.ramirez-adminer.rule=Host(`pgfd.byronrm.com`)"
+        - "traefik.http.routers.ramirez-adminer-secure.entrypoints=https"
+        - "traefik.http.routers.ramirez-adminer-secure.rule=Host(`pgfd.byronrm.com`)"
+        - "traefik.http.routers.ramirez-adminer-secure.tls=true"
+        - "traefik.http.routers.ramirez-adminer-secure.tls.certresolver=http"
+        - "traefik.http.services.ramirez-adminer-service.loadbalancer.server.port=8080"
+        - "traefik.docker.network=traefik-public"
+
+  # CONTROLADOR PORTAINER CE
+  portainer:
+    image: portainer/portainer-ce:latest
+    networks:
+      - traefik-public
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.ramirez-portainer.entrypoints=http"
+        - "traefik.http.routers.ramirez-portainer.rule=Host(`portainerfd.byronrm.com`)"
+        - "traefik.http.routers.ramirez-portainer-secure.entrypoints=https"
+        - "traefik.http.routers.ramirez-portainer-secure.rule=Host(`portainerfd.byronrm.com`)"
+        - "traefik.http.routers.ramirez-portainer-secure.tls=true"
+        - "traefik.http.routers.ramirez-portainer-secure.tls.certresolver=http"
+        - "traefik.http.services.ramirez-portainer-service.loadbalancer.server.port=9000"
+        - "traefik.docker.network=traefik-public"
+
+volumes:
+  pgdata:
+  portainer_data:
+
+networks:
+  traefik-public:
+    external: true
