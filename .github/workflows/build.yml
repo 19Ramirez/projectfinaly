@@ -73,9 +73,6 @@ jobs:
             echo "==> Logeando Docker en el registro GHCR..."
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            echo "==> Forzando descarga de la nueva versión de la imagen..."
-            docker pull ghcr.io/19ramirez/proyectofinal/docker-taller:1.0.0
-
             echo "==> Limpiando versiones obsoletas del stack..."
             docker stack rm taller || true
             echo "Esperando liberación de puertos..."

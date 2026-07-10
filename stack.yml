@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # PROXY INVERSO PRINCIPAL (TRAEFIK) - Gestiona SSL y subdominios automáticamente
   traefik:
     image: traefik:v2.10
     command:
@@ -27,7 +26,6 @@ services:
         constraints:
           - node.role == manager
 
-  # APLICACIÓN WEB COMPLETAMENTE FUNCIONAL (FRONTEND + BACKEND INTEGRADOS)
   app:
     image: ghcr.io/19ramirez/proyectofinal/docker-taller:1.0.0
     networks:
@@ -43,12 +41,10 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        # Redirección Forzada HTTP -> HTTPS (Subdominio Frontend / App)
         - "traefik.http.routers.ramirez-app.entrypoints=http"
         - "traefik.http.routers.ramirez-app.rule=Host(`fd.byronrm.com`)"
         - "traefik.http.middlewares.ramirez-app-redirect.redirectscheme.scheme=https"
         - "traefik.http.routers.ramirez-app.middlewares=ramirez-app-redirect"
-        # Endpoint Seguro HTTPS
         - "traefik.http.routers.ramirez-app-secure.entrypoints=https"
         - "traefik.http.routers.ramirez-app-secure.rule=Host(`fd.byronrm.com`) || Host(`backfd.byronrm.com`)"
         - "traefik.http.routers.ramirez-app-secure.tls=true"
@@ -56,7 +52,6 @@ services:
         - "traefik.http.services.ramirez-app-service.loadbalancer.server.port=5000"
         - "traefik.docker.network=traefik-public"
 
-  # BASE DE DATOS POSTGRESQL (PERSISTENCIA REQUERIDA POR LA RÚBRICA)
   db:
     image: postgres:15-alpine
     networks:
@@ -72,7 +67,6 @@ services:
       restart_policy:
         condition: on-failure
 
-  # ADMINISTRADOR GRÁFICO DE LA BASE DE DATOS (ADMINER)
   adminer:
     image: adminer:latest
     networks:
@@ -92,7 +86,6 @@ services:
         - "traefik.http.services.ramirez-adminer-service.loadbalancer.server.port=8080"
         - "traefik.docker.network=traefik-public"
 
-  # CONTROLADOR PORTAINER CE
   portainer:
     image: portainer/portainer-ce:latest
     networks:

@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  app:
+    image: ghcr.io/19ramirez/proyectofinal/docker-taller:1.0.0
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=taller_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres_password
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=taller_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_password
+    volumes:
+      - pgdata_local:/var/lib/postgresql/data
+    restart: always
+
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    restart: always
+
+volumes:
+  pgdata_local:
