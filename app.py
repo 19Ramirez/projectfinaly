@@ -4,7 +4,7 @@ import os
 import psycopg2
 
 app = Flask(__name__)
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 
 # Variables de entorno para conectar de manera segura a la Base de Datos
 DB_HOST = os.environ.get("DB_HOST", "db")

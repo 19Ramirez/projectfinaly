@@ -1,6 +1,5 @@
 FROM python:3.12-slim
 
-# Instalar dependencias del sistema necesarias para compilar componentes de PostgreSQL
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     gcc \

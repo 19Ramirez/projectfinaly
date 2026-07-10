@@ -6,13 +6,13 @@ services:
     image: traefik:v2.10
     command:
       - "--providers.docker=true"
-      - "--providers.docker.swarmMode=true" # Modo Clúster Swarm activo
+      - "--providers.docker.swarmMode=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.http.address=:80"
       - "--entrypoints.https.address=:443"
       - "--certificatesresolvers.http.acme.httpchallenge=true"
       - "--certificatesresolvers.http.acme.httpchallenge.entrypoint=http"
-      - "--certificatesresolvers.http.acme.email=byronrm@example.com" # Cambiar por tu correo real si deseas
+      - "--certificatesresolvers.http.acme.email=byronrm@example.com"
       - "--certificatesresolvers.http.acme.storage=/acme.json"
     ports:
       - "80:80"
@@ -29,7 +29,7 @@ services:
 
   # APLICACIÓN WEB COMPLETAMENTE FUNCIONAL (FRONTEND + BACKEND INTEGRADOS)
   app:
-    image: ghcr.io/19ramirez/taller-git-colaborativo/docker-taller:1.0.0
+    image: ghcr.io/19ramirez/proyectofinal/docker-taller:1.0.0
     networks:
       - traefik-public
     environment:
@@ -43,7 +43,7 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        # Redirección Forzada HTTP -> HTTPS (Subdominio Frontend)
+        # Redirección Forzada HTTP -> HTTPS (Subdominio Frontend / App)
         - "traefik.http.routers.ramirez-app.entrypoints=http"
         - "traefik.http.routers.ramirez-app.rule=Host(`fd.byronrm.com`)"
         - "traefik.http.middlewares.ramirez-app-redirect.redirectscheme.scheme=https"
@@ -56,7 +56,7 @@ services:
         - "traefik.http.services.ramirez-app-service.loadbalancer.server.port=5000"
         - "traefik.docker.network=traefik-public"
 
-  # BASE DE DATOS POSTGRESQL (PERSISTENCIA REQUERIDA)
+  # BASE DE DATOS POSTGRESQL (PERSISTENCIA REQUERIDA POR LA RÚBRICA)
   db:
     image: postgres:15-alpine
     networks:
