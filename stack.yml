@@ -1,33 +1,8 @@
 version: '3.8'
 
 services:
-  traefik:
-    image: traefik:v2.10
-    command:
-      - "--providers.docker=true"
-      - "--providers.docker.swarmMode=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.http.address=:80"
-      - "--entrypoints.https.address=:443"
-      - "--certificatesresolvers.http.acme.httpchallenge=true"
-      - "--certificatesresolvers.http.acme.httpchallenge.entrypoint=http"
-      - "--certificatesresolvers.http.acme.email=byronrm@example.com"
-      - "--certificatesresolvers.http.acme.storage=/acme.json"
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /home/1750002782/landinga/acme.json:/acme.json
-    networks:
-      - traefik-public
-    deploy:
-      placement:
-        constraints:
-          - node.role == manager
-
   app:
-    image: ghcr.io/19ramirez/proyectofinal/docker-taller:1.0.0
+    image: ghcr.io/19ramirez/proyectofinaly/docker-taller:1.0.0
     networks:
       - traefik-public
     environment:
@@ -35,6 +10,8 @@ services:
       - DB_NAME=taller_db
       - DB_USER=postgres
       - DB_PASSWORD=postgres_password
+    volumes:
+      - app_images_prod:/app/static/uploads
     deploy:
       replicas: 1
       restart_policy:
@@ -111,6 +88,7 @@ services:
 volumes:
   pgdata:
   portainer_data:
+  app_images_prod:
 
 networks:
   traefik-public:
