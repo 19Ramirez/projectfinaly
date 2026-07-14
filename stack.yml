@@ -53,7 +53,7 @@ services:
         - "traefik.http.routers.ramirez-app-secure.rule=Host(`fd.byronrm.com`)"
         - "traefik.http.routers.ramirez-app-secure.tls=true"
         - "traefik.http.routers.ramirez-app-secure.tls.certresolver=http"
-        - "traefik.http.services.ramirez-app-service.loadbalancer.server.port=5000"
+        - "traefik.http.services.taller-app.loadbalancer.server.port=5000"
         - "traefik.docker.network=traefik-public"
 
   db:
