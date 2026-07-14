@@ -1,4 +1,4 @@
-cat << 'EOF' > /home/1750002782/landinga/README.md
+
 # 🚀 Proyecto Final: Despliegue Automatizado de Aplicación en VPS con Docker Swarm & Traefik
 
 Este proyecto comprende el despliegue automatizado en producción de una aplicación web de microservicios sobre un Servidor VPS de Contabo, utilizando **Docker Swarm** para la orquestación, **Traefik v2** como proxy inverso dinámico con resolución automática de certificados SSL (HTTPS), y un pipeline de **CI/CD con GitHub Actions**.
