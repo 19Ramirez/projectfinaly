@@ -5,8 +5,10 @@ services:
     image: traefik:v2.10
     command:
       - "--providers.docker=true"
-      - "--providers.docker.swarmMode=true" # Clave para que lea contenedores Swarm
+      - "--providers.docker.swarmMode=true" # Requerido para leer etiquetas en Docker Swarm
       - "--providers.docker.exposedbydefault=false"
+      # Solución definitiva al error "client version 1.24 is too old":
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock?apiVersion=1.40"
       - "--entrypoints.http.address=:80"
       - "--entrypoints.https.address=:443"
       - "--certificatesresolvers.http.acme.httpchallenge=true"
@@ -19,9 +21,6 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "traefik-certificates:/letsencrypt"
-    # SOLUCIÓN 1: Forzar la versión de API compatible con tu VPS de Contabo
-    environment:
-      - DOCKER_API_VERSION=1.40
     networks:
       - traefik-public
     deploy:
@@ -48,17 +47,17 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        # Configuración HTTP
+        # Configuración del Router HTTP (Redirección a HTTPS)
         - "traefik.http.routers.ramirez-app.entrypoints=http"
         - "traefik.http.routers.ramirez-app.rule=Host(`fd.byronrm.com`)"
         - "traefik.http.middlewares.ramirez-app-redirect.redirectscheme.scheme=https"
         - "traefik.http.routers.ramirez-app.middlewares=ramirez-app-redirect"
-        # Configuración HTTPS
+        # Configuración del Router HTTPS (Seguro)
         - "traefik.http.routers.ramirez-app-secure.entrypoints=https"
         - "traefik.http.routers.ramirez-app-secure.rule=Host(`fd.byronrm.com`)"
         - "traefik.http.routers.ramirez-app-secure.tls=true"
         - "traefik.http.routers.ramirez-app-secure.tls.certresolver=http"
-        # SOLUCIÓN 2: Mapeo explícito y unificado del servicio para evitar el 404
+        # Mapeo del balanceador de carga al puerto interno de Flask
         - "traefik.http.routers.ramirez-app.service=ramirez-app-service"
         - "traefik.http.routers.ramirez-app-secure.service=ramirez-app-service"
         - "traefik.http.services.ramirez-app-service.loadbalancer.server.port=5000"
@@ -89,8 +88,10 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
+        # Router HTTP
         - "traefik.http.routers.ramirez-adminer.entrypoints=http"
         - "traefik.http.routers.ramirez-adminer.rule=Host(`pgfd.byronrm.com`)"
+        # Router HTTPS (Seguro)
         - "traefik.http.routers.ramirez-adminer-secure.entrypoints=https"
         - "traefik.http.routers.ramirez-adminer-secure.rule=Host(`pgfd.byronrm.com`)"
         - "traefik.http.routers.ramirez-adminer-secure.tls=true"
@@ -111,8 +112,10 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
+        # Router HTTP
         - "traefik.http.routers.ramirez-portainer.entrypoints=http"
         - "traefik.http.routers.ramirez-portainer.rule=Host(`portainerfd.byronrm.com`)"
+        # Router HTTPS (Seguro)
         - "traefik.http.routers.ramirez-portainer-secure.entrypoints=https"
         - "traefik.http.routers.ramirez-portainer-secure.rule=Host(`portainerfd.byronrm.com`)"
         - "traefik.http.routers.ramirez-portainer-secure.tls=true"
