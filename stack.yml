@@ -1,6 +1,33 @@
 version: '3.8'
 
 services:
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true" # Clave para que lea contenedores Swarm
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.https.address=:443"
+      - "--certificatesresolvers.http.acme.httpchallenge=true"
+      - "--certificatesresolvers.http.acme.httpchallenge.entrypoint=http"
+      - "--certificatesresolvers.http.acme.email=tu-correo@gmail.com" # Puedes dejarlo así o poner tu mail
+      - "--certificatesresolvers.http.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "traefik-certificates:/letsencrypt"
+    networks:
+      - traefik-public
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
   app:
     image: ghcr.io/19ramirez/projectfinaly/docker-project:1.0.0
     networks:
@@ -23,7 +50,7 @@ services:
         - "traefik.http.middlewares.ramirez-app-redirect.redirectscheme.scheme=https"
         - "traefik.http.routers.ramirez-app.middlewares=ramirez-app-redirect"
         - "traefik.http.routers.ramirez-app-secure.entrypoints=https"
-        - "traefik.http.routers.ramirez-app-secure.rule=Host(`fd.byronrm.com`) || Host(`backfd.byronrm.com`)"
+        - "traefik.http.routers.ramirez-app-secure.rule=Host(`fd.byronrm.com`)"
         - "traefik.http.routers.ramirez-app-secure.tls=true"
         - "traefik.http.routers.ramirez-app-secure.tls.certresolver=http"
         - "traefik.http.services.ramirez-app-service.loadbalancer.server.port=5000"
@@ -60,7 +87,7 @@ services:
         - "traefik.http.routers.ramirez-adminer-secure.rule=Host(`pgfd.byronrm.com`)"
         - "traefik.http.routers.ramirez-adminer-secure.tls=true"
         - "traefik.http.routers.ramirez-adminer-secure.tls.certresolver=http"
-        - "traefik.http.services.ramirez-adminer-service.loadbalancer.server.port=5000"
+        - "traefik.http.services.ramirez-adminer-service.loadbalancer.server.port=8080"
         - "traefik.docker.network=traefik-public"
 
   portainer:
@@ -89,6 +116,7 @@ volumes:
   pgdata:
   portainer_data:
   app_images_prod:
+  traefik-certificates:  # Volumen para guardar tus SSL de Let's Encrypt de forma permanente
 
 networks:
   traefik-public:
