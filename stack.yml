@@ -11,7 +11,7 @@ services:
       - "--entrypoints.https.address=:443"
       - "--certificatesresolvers.http.acme.httpchallenge=true"
       - "--certificatesresolvers.http.acme.httpchallenge.entrypoint=http"
-      - "--certificatesresolvers.http.acme.email=tu-correo@gmail.com" # Puedes dejarlo así o poner tu mail
+      - "--certificatesresolvers.http.acme.email=tu-correo@gmail.com"
       - "--certificatesresolvers.http.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
@@ -19,6 +19,9 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "traefik-certificates:/letsencrypt"
+    # SOLUCIÓN 1: Forzar la versión de API compatible con tu VPS de Contabo
+    environment:
+      - DOCKER_API_VERSION=1.40
     networks:
       - traefik-public
     deploy:
@@ -45,15 +48,20 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
+        # Configuración HTTP
         - "traefik.http.routers.ramirez-app.entrypoints=http"
         - "traefik.http.routers.ramirez-app.rule=Host(`fd.byronrm.com`)"
         - "traefik.http.middlewares.ramirez-app-redirect.redirectscheme.scheme=https"
         - "traefik.http.routers.ramirez-app.middlewares=ramirez-app-redirect"
+        # Configuración HTTPS
         - "traefik.http.routers.ramirez-app-secure.entrypoints=https"
         - "traefik.http.routers.ramirez-app-secure.rule=Host(`fd.byronrm.com`)"
         - "traefik.http.routers.ramirez-app-secure.tls=true"
         - "traefik.http.routers.ramirez-app-secure.tls.certresolver=http"
-        - "traefik.http.services.taller-app.loadbalancer.server.port=5000"
+        # SOLUCIÓN 2: Mapeo explícito y unificado del servicio para evitar el 404
+        - "traefik.http.routers.ramirez-app.service=ramirez-app-service"
+        - "traefik.http.routers.ramirez-app-secure.service=ramirez-app-service"
+        - "traefik.http.services.ramirez-app-service.loadbalancer.server.port=5000"
         - "traefik.docker.network=traefik-public"
 
   db:
@@ -116,7 +124,7 @@ volumes:
   pgdata:
   portainer_data:
   app_images_prod:
-  traefik-certificates:  # Volumen para guardar tus SSL de Let's Encrypt de forma permanente
+  traefik-certificates:
 
 networks:
   traefik-public:
