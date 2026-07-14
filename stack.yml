@@ -2,10 +2,11 @@ version: '3.8'
 
 services:
   traefik:
-    image: traefik:v2.10
+    # 👇 ACTUALIZADO: v2.11 contiene el cliente de Docker moderno compatible
+    image: traefik:v2.11
     command:
       - "--providers.docker=true"
-      - "--providers.docker.swarmMode=true" # Clave para que lea contenedores Swarm
+      - "--providers.docker.swarmMode=true"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--entrypoints.http.address=:80"
@@ -20,7 +21,6 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "traefik-certificates:/letsencrypt"
-    # Forzamos la versión de API compatible mediante variable de entorno para el SDK de Docker
     environment:
       - DOCKER_API_VERSION=1.40
     networks:
@@ -59,7 +59,7 @@ services:
         - "traefik.http.routers.ramirez-app-secure.rule=Host(`fd.byronrm.com`)"
         - "traefik.http.routers.ramirez-app-secure.tls=true"
         - "traefik.http.routers.ramirez-app-secure.tls.certresolver=http"
-        # Mapeo unificado del servicio
+        # Mapeo de servicio
         - "traefik.http.routers.ramirez-app.service=ramirez-app-service"
         - "traefik.http.routers.ramirez-app-secure.service=ramirez-app-service"
         - "traefik.http.services.ramirez-app-service.loadbalancer.server.port=5000"
