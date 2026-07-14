@@ -60,7 +60,7 @@ services:
         - "traefik.http.routers.ramirez-adminer-secure.rule=Host(`pgfd.byronrm.com`)"
         - "traefik.http.routers.ramirez-adminer-secure.tls=true"
         - "traefik.http.routers.ramirez-adminer-secure.tls.certresolver=http"
-        - "traefik.http.services.ramirez-adminer-service.loadbalancer.server.port=8080"
+        - "traefik.http.services.ramirez-adminer-service.loadbalancer.server.port=5000"
         - "traefik.docker.network=traefik-public"
 
   portainer:
