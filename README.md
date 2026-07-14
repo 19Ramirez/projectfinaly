@@ -1,46 +1,29 @@
-# 🚀 Proyecto Final: Despliegue Automatizado de Aplicación en VPS con Docker Swarm & Traefik
+# 🚀 Taller Stack — Sistema de Despliegue Continuo (Docker Swarm + Traefik)
 
-Este proyecto comprende el despliegue automatizado en producción de una aplicación web de microservicios sobre un Servidor VPS de Contabo, utilizando **Docker Swarm** para la orquestación, **Traefik v2** como proxy inverso dinámico con resolución automática de certificados SSL (HTTPS), y un pipeline de **CI/CD con GitHub Actions**.
-
----
-
-## 👥 Integrantes del Grupo
-* **Integrante 1:** Francisco Ramírez
-* **Integrante 1:** Domenica Espinosa
+Este repositorio contiene la configuración del stack de producción para el proyecto de taller. Utiliza **Docker Swarm** para la orquestación de contenedores y **Traefik v2.11** como Proxy Inverso para manejar de forma automática los certificados SSL con Let's Encrypt.
 
 ---
 
-## 🗺️ Diagrama de Arquitectura de la Solución
+## 🔗 Enlaces de Acceso
 
-El flujo de tráfico e interacción entre componentes sigue el siguiente esquema:
+| Servicio | URL de Acceso | Descripción |
+| :--- | :--- | :--- |
+| **🚀 Aplicación Web** | [https://fd.byronrm.com](https://fd.byronrm.com) | Entorno principal de la aplicación Flask / Python. |
+| **🗄️ Base de Datos (Adminer)** | [https://pgfd.byronrm.com](https://pgfd.byronrm.com) | Gestor web para administrar la base de datos PostgreSQL. |
+| **🐳 Portainer** | [https://portainerfd.byronrm.com](https://portainerfd.byronrm.com) | Panel de administración visual de Docker Swarm. |
 
-```text
-[ Cliente Web / Navegador ] 
-       │
-       ▼ (Subdominios Públicos de byronrm.com vía Puerto 80 / 443)
-┌────────────────────────────────────────────────────────────────────────┐
-│ Servidor VPS Contabo (IP: 161.97.139.120 | OS: Debian 12)             │
-│                                                                        │
-│   ┌────────────────────────────────────────────────────────────────┐   │
-│   │ Red Overlay Virtual: traefik-public                            │   │
-│   │                                                                │   │
-│   │  ┌─────────────────┐       HTTPS       ┌────────────────────┐  │   │
-│   │  │  TRAEFIK v2.10  │──────────────────►│    PORTAINER CE    │  │   │
-│   │  │ (Proxy Inverso) │                   │ (portainerfd.***)  │  │   │
-│   │  └────────┬────────┘                   └────────────────────┘  │   │
-│   │           │                                                    │   │
-│   │           ├────────────────────────────┐                       │   │
-│   │           ▼ HTTPS                      ▼ HTTPS                 │   │
-│   │  ┌──────────────────┐         ┌────────────────────┐           │   │
-│   │  │   FLASK APP      │         │     ADMINER        │           │   │
-│   │  │ (fd.byronrm.com) │         │ (pgfd.byronrm.com) │           │   │
-│   │  └────────┬─────────┘         └─────────┬──────────┘           │   │
-│   │           │                             │                      │   │
-│   │           │ Conexión Interna DNS        │ Gestión Gráfica      │   │
-│   │           ▼                             ▼                      │   │
-│   │  ┌─────────────────────────────────────────────────┐           │   │
-│   │  │       BASE DE DATOS POSTGRESQL (Servicio: db)    │           │   │
-│   │  │       • Volumen persistente: pgdata             │           │   │
-│   │  └─────────────────────────────────────────────────┘           │   │
-│   └────────────────────────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────────────────────────┘
+---
+
+## 🏗️ Requisitos Previos en el Servidor (VPS)
+
+Antes de realizar el despliegue en un VPS nuevo (como Contabo), asegúrate de inicializar el Swarm y crear la red pública que utiliza Traefik:
+
+```bash
+# 1. Iniciar Docker Swarm (si no está activo)
+docker swarm init
+
+# 2. Crear la red overlay externa para Traefik
+docker network create --driver=overlay traefik-public
+
+# 3. Dar permisos correctos al socket de Docker (Evita errores de permisos)
+sudo chmod 666 /var/run/docker.sock
