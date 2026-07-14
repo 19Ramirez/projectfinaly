@@ -1,6 +1,6 @@
 services:
   app:
-    image: ghcr.io/19ramirez/proyectofinaly/docker-proyect:1.0.0
+    image: ghcr.io/19ramirez/projectfinaly/docker-project:1.0.0
     build: .
     ports:
       - "5000:5000"
