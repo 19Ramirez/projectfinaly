@@ -10,7 +10,6 @@ Este repositorio contiene la configuración del stack de producción para el pro
 | :--- | :--- | :--- |
 | **🚀 Aplicación Web** | [https://fd.byronrm.com](https://fd.byronrm.com) | Entorno principal de la aplicación Flask / Python. |
 | **🗄️ Base de Datos (Adminer)** | [https://pgfd.byronrm.com](https://pgfd.byronrm.com) | Gestor web para administrar la base de datos PostgreSQL. |
-| **🐳 Portainer** | [https://portainerfd.byronrm.com](https://portainerfd.byronrm.com) | Panel de administración visual de Docker Swarm. |
 
 ---
 
